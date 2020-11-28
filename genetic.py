@@ -24,7 +24,7 @@ PRODUTO = {
 # Target string to be generated 
 # PRECISO Q SEJA 50 % eficiente
 TARGE_NEW = 0.5
-TARGET = "BRUNADA TU E MUITO MEU CARO"
+TARGET = "STRING TESTE"
   
 class Individual(object): 
     ''' 
