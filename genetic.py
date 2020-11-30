@@ -1,19 +1,21 @@
 # Python3 program to create target string, starting from 
 # random string using Genetic Algorithm 
   
-import random 
+import random, json
+import os
+
+def cls():
+    os.system('cls' if os.name=='nt' else 'clear')
   
 # Number of individuals in each generation 
 POPULATION_SIZE = 100
-  
-# Valid genes 
-GENES = '''abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOP 
-QRSTUVWXYZ 1234567890, .-;:_!"#%&/()=?@${[]}'''
 
-MIN_PRODUTOS = 10
-MAX_PRODUTOS = 200
-MAX_PESO = 300
-AUTONOMIA = 200
+MIN_PRODUTOS = 10 # Quantidade minima de produtos
+MAX_PRODUTOS = 30 # Quantidade maxima de produtos
+MAX_DISTANCIA = 15 # Distancia em KM
+MAX_PESO_PRODUTO = 43 # Peso Maximo de produto
+MAX_PESO = 650 # Peso maximo do veiculo
+AUTONOMIA = 200 # Autonomia do veiculo
 
 PRODUTO = {
     "PESO": 20,
@@ -23,8 +25,6 @@ PRODUTO = {
   
 # Target string to be generated 
 # PRECISO Q SEJA 50 % eficiente
-TARGE_NEW = 0.5
-TARGET = "STRING TESTE"
   
 class Individual(object): 
     ''' 
@@ -39,11 +39,11 @@ class Individual(object):
         ''' 
         create random genes for mutation 
         '''
-        global GENES, PRODUTO
-        PRODUTO['DISTANCIA'] = random.randint(1,15)
-        PRODUTO['PESO'] = random.randint(1,50)
-        # gene = random.choice(GENES) 
-        gene = PRODUTO
+        global PRODUTO
+        TMPPRODUTO = PRODUTO.copy()
+        TMPPRODUTO['DISTANCIA'] = random.randint(1,MAX_DISTANCIA)
+        TMPPRODUTO['PESO'] = random.randint(1,MAX_PESO_PRODUTO)
+        gene = TMPPRODUTO
         return gene 
   
     @classmethod
@@ -51,10 +51,10 @@ class Individual(object):
         ''' 
         create chromosome or string of genes 
         '''
-        global TARGET, MIN_PRODUTOS, MAX_PRODUTOS 
-        gnome_len = len(TARGET) 
-        random_PRODUTOS = random.randint(MIN_PRODUTOS, MAX_PRODUTOS)
-        return [self.mutated_genes() for _ in range(random_PRODUTOS)] 
+        global MIN_PRODUTOS, MAX_PRODUTOS
+        random_PRODUTOS = random.randint(MIN_PRODUTOS, MAX_PRODUTOS * 1.4)
+        mutated = [self.mutated_genes() for _ in range(random_PRODUTOS)] 
+        return mutated
   
     def mate(self, par2): 
         ''' 
@@ -93,34 +93,48 @@ class Individual(object):
         characters in string which differ from target 
         string. 
         '''
-        global TARGET, AUTONOMIA, MAX_PESO
+        global AUTONOMIA, MAX_PESO
         fitness = 0
         
         SUM_PESO = 0
         SUM_DISTANCIA = 0 
+        
+        if (len(self.chromosome) > MAX_PRODUTOS):
+            return 13
+        
         for produto in self.chromosome:
             SUM_DISTANCIA += produto['DISTANCIA']
             SUM_PESO += produto['PESO']
-        
-        
-        
-        if (SUM_DISTANCIA/AUTONOMIA > 0.9 and SUM_PESO/MAX_PESO > 0.9):
-            # print("0.9 REGRA",SUM_DISTANCIA/AUTONOMIA, SUM_PESO/MAX_PESO)
-            fitness = 1
-        
-        elif (SUM_DISTANCIA/AUTONOMIA > 0.5 and SUM_PESO/MAX_PESO > 0.5):
-            # print("0.5 REGRA",SUM_DISTANCIA/AUTONOMIA, SUM_PESO/MAX_PESO)
-            fitness = 3
 
-        elif (SUM_DISTANCIA/AUTONOMIA > 0.2 and SUM_PESO/MAX_PESO > 0.2):
-            # print("0.2 REGRA",SUM_DISTANCIA/AUTONOMIA, SUM_PESO/MAX_PESO)
-            fitness = 5
+        DIST_AUTO_RELATION = SUM_DISTANCIA/AUTONOMIA
+        PESO_LIMIT_RELATION = SUM_PESO/MAX_PESO
+        
+        if ((DIST_AUTO_RELATION >= 1 or DIST_AUTO_RELATION <= 0) or (PESO_LIMIT_RELATION >= 1 or PESO_LIMIT_RELATION <= 0)):
+            return 13
+
+        if (DIST_AUTO_RELATION >= 0.8 and DIST_AUTO_RELATION <= 1):
+            fitness += 1
+        
+        if (DIST_AUTO_RELATION >= 0.5 and DIST_AUTO_RELATION <= 0.8):
+            fitness += 3
+        
+        if (DIST_AUTO_RELATION >= 0.2 and DIST_AUTO_RELATION <= 0.5):
+            fitness += 5
+
+        
+        if (PESO_LIMIT_RELATION >= 0.8 and PESO_LIMIT_RELATION <= 1):
+            fitness += 1
+        
+        if (PESO_LIMIT_RELATION >= 0.5 and PESO_LIMIT_RELATION <= 0.8):
+            fitness += 3
+
+        if (PESO_LIMIT_RELATION >= 0.2 and PESO_LIMIT_RELATION <= 0.5):
+            fitness += 5
+
+        if ((PESO_LIMIT_RELATION + DIST_AUTO_RELATION)/2 >= 0.98):
+            fitness = 0
 
         return fitness   
-
-        # for gs, gt in zip(self.chromosome, TARGET): 
-        #     if gs != gt: fitness+= 1
-        # return fitness 
   
 # Driver code 
 def main(): 
@@ -167,13 +181,22 @@ def main():
             new_generation.append(child) 
   
         population = new_generation 
-        # tmp = "".join(population[0].chromosome)
+
         print(f"Generation: {generation}\tString: {len(population[0].chromosome)}\tFitness: {population[0].fitness}") 
-  
+        # cls()
         generation += 1
   
-    # tmp = "".join(population[0].chromosome)
-    print(f"Generation: {generation}\tString: {population[0].chromosome}\tFitness: {population[0].fitness}") 
+    print(f"Generation: {generation}\tProdutos: {population[0].chromosome}\tFitness: {population[0].fitness}") 
+    
+    
+    qutProdutos = len(population[0].chromosome)
+    sumPeso = 0
+    sumDistancia = 0
+    for produto in population[0].chromosome:
+        sumDistancia = produto['DISTANCIA'] + sumDistancia
+        sumPeso = produto['PESO'] + sumPeso
+    print("Estatisticas: ")
+    print(f"QUT PRODUTOS: {qutProdutos}  PESO TOTAL: {sumPeso}  DISTANCIA TOTAL: {sumDistancia}")
   
 if __name__ == '__main__': 
     main() 
