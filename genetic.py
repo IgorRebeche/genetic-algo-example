@@ -136,6 +136,24 @@ class Individual(object):
 
         return fitness   
   
+def showResult(population, generation):
+    print('Lista de produtos:')
+    for i, produto in enumerate(population[0].chromosome, start=1):
+        peso = produto['PESO']
+        distancia = produto['DISTANCIA']
+        print(f'Produto {i} -> Peso: {peso} Distancia: {distancia}')
+    print('----------------------------------')
+    qutProdutos = len(population[0].chromosome)
+    sumPeso = 0
+    sumDistancia = 0
+    for produto in population[0].chromosome:
+        sumDistancia = produto['DISTANCIA'] + sumDistancia
+        sumPeso = produto['PESO'] + sumPeso
+    
+    print("Estatisticas: ")
+    print(f'Ultima Geração: {generation} Fitness: {population[0].fitness}')
+    print(f"QUT PRODUTOS: {qutProdutos}  PESO TOTAL: {sumPeso}  DISTANCIA TOTAL: {sumDistancia}")
+
 # Driver code 
 def main(): 
     global POPULATION_SIZE 
@@ -182,21 +200,11 @@ def main():
   
         population = new_generation 
 
-        print(f"Generation: {generation}\tString: {len(population[0].chromosome)}\tFitness: {population[0].fitness}") 
+        print(f"Generation: {generation}\tQuantidade de Produtos: {len(population[0].chromosome)}\tFitness: {population[0].fitness}") 
         # cls()
         generation += 1
-  
-    print(f"Generation: {generation}\tProdutos: {population[0].chromosome}\tFitness: {population[0].fitness}") 
-    
-    
-    qutProdutos = len(population[0].chromosome)
-    sumPeso = 0
-    sumDistancia = 0
-    for produto in population[0].chromosome:
-        sumDistancia = produto['DISTANCIA'] + sumDistancia
-        sumPeso = produto['PESO'] + sumPeso
-    print("Estatisticas: ")
-    print(f"QUT PRODUTOS: {qutProdutos}  PESO TOTAL: {sumPeso}  DISTANCIA TOTAL: {sumDistancia}")
+    print("Busca finalizada!\n\n")
+    showResult(population=population, generation=generation)
   
 if __name__ == '__main__': 
     main() 
