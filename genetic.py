@@ -1,17 +1,11 @@
-# Python3 program to create target string, starting from 
-# random string using Genetic Algorithm 
-  
-import random, json
-import os
 
-def cls():
-    os.system('cls' if os.name=='nt' else 'clear')
-  
-# Number of individuals in each generation 
+import random, json
+
+# Numero de elementos para cada geração
 POPULATION_SIZE = 100
 
 MIN_PRODUTOS = 10 # Quantidade minima de produtos
-MAX_PRODUTOS = 30 # Quantidade maxima de produtos
+MAX_PRODUTOS =30 # Quantidade maxima de produtos
 MAX_DISTANCIA = 15 # Distancia em KM
 MAX_PESO_PRODUTO = 43 # Peso Maximo de produto
 MAX_PESO = 650 # Peso maximo do veiculo
@@ -21,23 +15,19 @@ PRODUTO = {
     "PESO": 20,
     "DISTANCIA": 15,
 }
-
   
-# Target string to be generated 
-# PRECISO Q SEJA 50 % eficiente
-  
-class Individual(object): 
+class Elemento(object): 
     ''' 
-    Class representing individual in population 
+    Classe representando um elemento na população
     '''
-    def __init__(self, chromosome): 
-        self.chromosome = chromosome  
+    def __init__(self, cromossomo): 
+        self.cromossomo = cromossomo  
         self.fitness = self.cal_fitness() 
   
     @classmethod
-    def mutated_genes(self): 
+    def mutar_genes(self): 
         ''' 
-        create random genes for mutation 
+        Criar genes randomicos para mutação 
         '''
         global PRODUTO
         TMPPRODUTO = PRODUTO.copy()
@@ -47,51 +37,46 @@ class Individual(object):
         return gene 
   
     @classmethod
-    def create_gnome(self): 
+    def criar_gnoma(self): 
         ''' 
-        create chromosome or string of genes 
+        Criar cromossomos (Genes de produtos) 
         '''
         global MIN_PRODUTOS, MAX_PRODUTOS
         random_PRODUTOS = random.randint(MIN_PRODUTOS, MAX_PRODUTOS * 1.4)
-        mutated = [self.mutated_genes() for _ in range(random_PRODUTOS)] 
+        mutated = [self.mutar_genes() for _ in range(random_PRODUTOS)] 
         return mutated
   
-    def mate(self, par2): 
+    def reproduzir(self, par2): 
         ''' 
-        Perform mating and produce new offspring 
+        Realizar reprodução e produzir novos descendentes 
         '''
   
         # chromosome for offspring 
-        child_chromosome = [] 
-        for gp1, gp2 in zip(self.chromosome, par2.chromosome):     
+        cromossomo_filho = [] 
+        for gp1, gp2 in zip(self.cromossomo, par2.cromossomo):     
   
-            # random probability   
+            # gerar uma probabilidade randomica  
             prob = random.random() 
   
-            # if prob is less than 0.45, insert gene 
-            # from parent 1  
+            # Se a probabilidade for menor que 45%, inserir gene do primeiro parente 
             if prob < 0.45: 
-                child_chromosome.append(gp1) 
+                cromossomo_filho.append(gp1) 
   
-            # if prob is between 0.45 and 0.90, insert 
-            # gene from parent 2 
+            # Se a probabilidade for entre 45% e 90%, inserir genes do parente 2
             elif prob < 0.90: 
-                child_chromosome.append(gp2) 
+                cromossomo_filho.append(gp2) 
   
-            # otherwise insert random gene(mutate),  
-            # for maintaining diversity 
+            # Caso nao, inserir genes randomicos para manter diversidade
             else: 
-                child_chromosome.append(self.mutated_genes()) 
+                cromossomo_filho.append(self.mutar_genes()) 
   
-        # create new Individual(offspring) using  
-        # generated chromosome for offspring 
-        return Individual(child_chromosome) 
+        # Retornar novo elemento para proxima geração
+        return Elemento(cromossomo_filho) 
   
     def cal_fitness(self): 
         ''' 
-        Calculate fittness score, it is the number of 
-        characters in string which differ from target 
-        string. 
+        Calcular o score de fitness dos elementos criados
+        baseando-se em diversas regras
         '''
         global AUTONOMIA, MAX_PESO
         fitness = 0
@@ -99,10 +84,10 @@ class Individual(object):
         SUM_PESO = 0
         SUM_DISTANCIA = 0 
         
-        if (len(self.chromosome) > MAX_PRODUTOS):
+        if (len(self.cromossomo) > MAX_PRODUTOS):
             return 13
         
-        for produto in self.chromosome:
+        for produto in self.cromossomo:
             SUM_DISTANCIA += produto['DISTANCIA']
             SUM_PESO += produto['PESO']
 
@@ -138,15 +123,15 @@ class Individual(object):
   
 def showResult(population, generation):
     print('Lista de produtos:')
-    for i, produto in enumerate(population[0].chromosome, start=1):
+    for i, produto in enumerate(population[0].cromossomo, start=1):
         peso = produto['PESO']
         distancia = produto['DISTANCIA']
         print(f'Produto {i} -> Peso: {peso} Distancia: {distancia}')
     print('----------------------------------')
-    qutProdutos = len(population[0].chromosome)
+    qutProdutos = len(population[0].cromossomo)
     sumPeso = 0
     sumDistancia = 0
-    for produto in population[0].chromosome:
+    for produto in population[0].cromossomo:
         sumDistancia = produto['DISTANCIA'] + sumDistancia
         sumPeso = produto['PESO'] + sumPeso
     
@@ -154,57 +139,51 @@ def showResult(population, generation):
     print(f'Ultima Geração: {generation} Fitness: {population[0].fitness}')
     print(f"QUT PRODUTOS: {qutProdutos}  PESO TOTAL: {sumPeso}  DISTANCIA TOTAL: {sumDistancia}")
 
-# Driver code 
 def main(): 
-    global POPULATION_SIZE 
-  
-    #current generation 
-    generation = 1
+    global POPULATION_SIZE
+    geracao = 1
   
     found = False
-    population = [] 
+    populacao = [] 
   
-    # create initial population 
+    #  Criar população incial 
     for _ in range(POPULATION_SIZE): 
-        gnome = Individual.create_gnome() 
-        population.append(Individual(gnome)) 
+        gnome = Elemento.criar_gnoma() 
+        populacao.append(Elemento(gnome)) 
   
     while not found: 
   
-        # sort the population in increasing order of fitness score 
-        population = sorted(population, key = lambda x:x.fitness) 
+        # Ordenar a população em ordem crescente de score do fitness
+        populacao = sorted(populacao, key = lambda x:x.fitness) 
   
-        # if the individual having lowest fitness score ie.  
-        # 0 then we know that we have reached to the target 
-        # and break the loop 
-        if population[0].fitness <= 0: 
+        # Se o elemento possuir o score zero
+        # paramos a geração pois encontramos o melhor cenario dentre as regras
+        if populacao[0].fitness <= 0: 
             found = True
             break
   
-        # Otherwise generate new offsprings for new generation 
-        new_generation = [] 
+        # Caso nao, gerar novos descendentes
+        nova_geracao = [] 
   
-        # Perform Elitism, that mean 10% of fittest population 
-        # goes to the next generation 
+        # Coletar 10% dos elementos mais adaptados para a proxima geração
         s = int((10*POPULATION_SIZE)/100) 
-        new_generation.extend(population[:s]) 
+        nova_geracao.extend(populacao[:s]) 
   
-        # From 50% of fittest population, Individuals  
-        # will mate to produce offspring 
+        # Dos 50% dos elementos mais adapatos, 
+        # geraremos novas reproduções para gerar novos descendentes
         s = int((90*POPULATION_SIZE)/100) 
         for _ in range(s): 
-            parent1 = random.choice(population[:50]) 
-            parent2 = random.choice(population[:50]) 
-            child = parent1.mate(parent2) 
-            new_generation.append(child) 
+            parente1 = random.choice(populacao[:50]) 
+            parente2 = random.choice(populacao[:50]) 
+            filho = parente1.reproduzir(parente2) 
+            nova_geracao.append(filho) 
   
-        population = new_generation 
+        populacao = nova_geracao 
 
-        print(f"Generation: {generation}\tQuantidade de Produtos: {len(population[0].chromosome)}\tFitness: {population[0].fitness}") 
-        # cls()
-        generation += 1
+        print(f"Generation: {geracao}\tQuantidade de Produtos: {len(populacao[0].cromossomo)}\tFitness: {populacao[0].fitness}") 
+        geracao += 1
     print("Busca finalizada!\n\n")
-    showResult(population=population, generation=generation)
+    showResult(population=populacao, generation=geracao)
   
 if __name__ == '__main__': 
     main() 
